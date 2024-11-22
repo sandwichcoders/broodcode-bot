@@ -7,7 +7,7 @@ from discord import app_commands
 import os
 from dotenv import load_dotenv
 import json
-from LinkChecker import LinkChecker  # Import the LinkChecker class
+from LinkChecker import LinkChecker
 from broodcode_modules.broodcode import generate_paninis_menu_markdown, generate_sandwich_menu_markdown, generate_special_menu_markdown
 
 load_dotenv()

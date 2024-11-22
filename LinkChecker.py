@@ -26,16 +26,16 @@ class LinkChecker:
                     EC.visibility_of_element_located((By.TAG_NAME, "sfc-button"))
                 )
                 if betaal_button.is_displayed():
-                    return "werkend"
+                    return "working"
                 else:
-                    return "verlopen"
+                    return "expired"
             except Exception as e:
                 print(f"Error: {e}")
-                return "verlopen"
+                return "error"
 
         except Exception as e:
             print(f"Error while loading the page: {e}")
-            return "verlopen"
+            return "error"
         finally:
             self.driver.quit()
 

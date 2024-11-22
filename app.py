@@ -33,7 +33,7 @@ intents.guilds = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-def check_link_status():
+async def check_link_status():
     config = read_config()
     link_to_check = config.get("payment_link", "")
     if not link_to_check:
@@ -42,16 +42,29 @@ def check_link_status():
     link_checker = LinkChecker()
     return link_checker.check_link(link_to_check)
 
-@tasks.loop(hours=24)
+@tasks.loop(seconds=3)
 async def daily_check():
     tz = pytz.timezone('Europe/Amsterdam')
     now = datetime.now(tz)
     
-    if now.hour == 8 and now.minute == 0:
-        status = check_link_status()
-        if status == "verlopen":
-            channel = bot.get_channel(int(os.getenv('CHANNEL_ID')))
-            await channel.send(f"<@&{DEV_ROLE_ID}> The Rabobank betaalverzoek link is: {status}")
+    # Check if its friday 08:00
+    if now.hour == 8 and now.minute == 0 and now.strftime("%A") == "Friday":
+        status = await check_link_status()
+        if status == "expired" or status == "error":
+            reminder_channel = bot.get_channel(int(os.getenv('REMINDER_CHANNEL_ID')))
+            await reminder_channel.send(f"<@&{DEV_ROLE_ID}> the payment link is invalid, please enter a new one using: `/set_link [payment_link]`")
+        else:
+            channel = bot.get_channel(int(os.getenv('MESSAGE_CHANNEL_ID')))
+            
+            full_menu = generate_full_menu()
+            config = read_config()
+            message_content = f"""
+# @everyone Bread is available for order today until 10AM 🙂
+<{config["payment_link"]}>
+"""
+            await channel.send(content=full_menu)
+            await channel.send(content=message_content)
+
 
 def is_breadmaster(interaction: discord.Interaction):
     return any(role.id == BREADMASTER_ROLE_ID for role in interaction.user.roles)
@@ -59,13 +72,19 @@ def is_breadmaster(interaction: discord.Interaction):
 def is_dev(interaction: discord.Interaction):
     return any(role.id == DEV_ROLE_ID for role in interaction.user.roles)
 
+def generate_full_menu():
+    sandwich_menu = generate_sandwich_menu_markdown()
+    special_menu = generate_special_menu_markdown()
+    paninis_menu = generate_paninis_menu_markdown()
+
+    return sandwich_menu + special_menu + paninis_menu
 
 @bot.tree.command(name="check_link", description="Check the current status of the Rabobank link.")
 @app_commands.check(lambda interaction: is_breadmaster(interaction) or is_dev(interaction))
 async def check_link(interaction: discord.Interaction):
     await interaction.response.send_message(f"Fetching status...")
-    status = check_link_status()
-    await interaction.edit_original_response(content=f"<@&{DEV_ROLE_ID}> The Rabobank betaalverzoek link is: {status}")
+    status = await check_link_status()
+    await interaction.edit_original_response(content=f"<@&{BREADMASTER_ROLE_ID}>, the payment link is: {status}")
 
 
 @bot.tree.command(name="set_link", description="Set a new Rabobank payment link.")
@@ -80,18 +99,14 @@ async def set_link(interaction: discord.Interaction, new_link: str):
 async def menu(interaction: discord.Interaction):
     await interaction.response.send_message("Fetching menu...")
 
-    sandwich_menu = generate_sandwich_menu_markdown()
-    special_menu = generate_special_menu_markdown()
-    paninis_menu = generate_paninis_menu_markdown()
+    full_menu = generate_full_menu()
 
-    full_menu = sandwich_menu + special_menu + paninis_menu
     await interaction.edit_original_response(content=full_menu)
 
 
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user}')
-    await bot.tree.sync()
     daily_check.start()
 
 bot.run(os.getenv('DISCORD_TOKEN'))

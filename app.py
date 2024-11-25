@@ -63,7 +63,7 @@ async def send_order_message():
     config = read_config()
 
     message_content = f"""
-# @everyone Bread is available for order today until 10AM 🙂
+{config["order_message"]}
 <{config["payment_link"]}>
 """
     await channel.send(content=full_menu)

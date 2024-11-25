@@ -11,7 +11,6 @@ from broodcode_modules.broodcode import generate_paninis_menu_markdown, generate
 
 load_dotenv()
 
-LOOP_CHECK_SECONDS = 60
 CONFIG_FILE = 'config.json'
 BREADMASTER_ROLE_ID = int(os.getenv('BREADMASTER_ROLE_ID'))
 DEV_ROLE_ID = int(os.getenv('DEV_ROLE_ID'))
@@ -78,21 +77,20 @@ def generate_full_menu():
 
     return sandwich_menu + special_menu + paninis_menu
 
-@tasks.loop(seconds=LOOP_CHECK_SECONDS)
+@tasks.loop(seconds=read_config()["loop_timeout"])
 async def daily_check():
     """Performs the daily check every 60 seconds."""
     tz = pytz.timezone('Europe/Amsterdam')
     now = datetime.now(tz)
-    
+    payment_message = None
     if now.hour == 8 and now.minute == 0 and now.strftime("%A") == "Friday":
-        await send_order_message()
+        payment_message = await send_order_message()
     elif now.hour == 10 and now.minute == 0 and now.strftime("%A") == "Friday":
-        channel = bot.get_channel(MESSAGE_CHANNEL_ID)
-        # Check for the last payment message, if exists, edit it
-        messages = await channel.history(limit=1).flatten()
-        if messages:
-            payment_message = messages[0]
-            await payment_message.edit(content="Orders are now closed. Thank you!")
+        if payment_message:
+            payment_message.edit(content="Orders are now closed. Thank you!")
+        else:
+            channel = bot.get_channel(MESSAGE_CHANNEL_ID)
+            channel.send(content="Orders are now closed. Thank you!")
 
 @bot.event
 async def on_ready():

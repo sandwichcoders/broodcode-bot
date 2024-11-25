@@ -1,4 +1,5 @@
 {
+    "loop_timeout": 60,
     "order_message": "# @everyone Bread is available for order today until 10AM 🙂",
     "payment_link": "your_payment_link"
 }

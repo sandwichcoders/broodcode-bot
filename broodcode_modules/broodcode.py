@@ -92,7 +92,7 @@ def format_price(price):
 def fetch_menu():
     try:
         response = requests.get(
-            f"https://bestellen.broodbode.nl/v2-2/pccheck/null/{date.today()}/afhalen/8?cb=1695969466297",
+            f"https://bestellen.broodbode.nl/v2-2/pccheck/null/29-11-2024/afhalen/8?cb=1695969466297",
             headers={
                 "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:125.0) Gecko/20100101 Firefox/125.0"
             },

@@ -84,8 +84,10 @@ async def daily_check():
     now = datetime.now(tz)
     payment_message = None
     if now.hour == 8 and now.minute == 0 and now.strftime("%A") == "Friday":
+        print('Friday YIPPEE')
         payment_message = await send_order_message()
     elif now.hour == 10 and now.minute == 0 and now.strftime("%A") == "Friday":
+        print('Not Friday')
         if payment_message:
             payment_message.edit(content="Orders are now closed. Thank you!")
         else:
@@ -96,8 +98,9 @@ async def daily_check():
 async def on_ready():
     """Triggered when the bot has logged in and is ready."""
     print(f'Logged in as {bot.user}')
-    await bot.tree.sync()  # Syncing the command tree
-    daily_check.start()
+    if not daily_check.is_running(): # type: ignore
+        daily_check.start() # type: ignore
+    await bot.tree.sync()
 
 @bot.tree.command(name="check_link", description="Check the current status of the Rabobank link.")
 @app_commands.check(is_breadmaster_or_dev)

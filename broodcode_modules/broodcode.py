@@ -33,7 +33,7 @@ def print_header(title):
 
 
 def calculate_price(bread_type, totals, product):
-    org_price = price = round(product["price"] * 100 + bread_type["surcharge"] * 100)
+    org_price = price = round(product["price"] * 100)
     while price in codes:
         price += 1
     profit = price - org_price
@@ -50,6 +50,25 @@ def calculate_price(bread_type, totals, product):
         "price": format_price(add_yirnick_fee(price)),
     }
 
+def calculate_price2(totals, product):
+    org_price = price = round(product["price"] * 100)
+    while price in codes:
+        price += 1
+    profit = price - org_price
+    totals["profit"] += profit
+    totals["count"] += 1
+
+    codes[price] = (product["title"], "Panini", profit)
+    versions.append(f"panini={price}")
+
+    return {
+        "profit": totals["profit"],
+        "count": totals["count"],
+        "product": codes[price],
+        "price": format_price(add_yirnick_fee(price)),
+    }
+
+
 
 def add_yirnick_fee(price):
     return price + 50
@@ -68,31 +87,11 @@ def format_price(price):
     euros = price // 100
     cents = price % 100
     return f"{euros},{cents:02d}"
-
-
-def add_yirnick_fee(price):
-    return price + 50
-
-
-def format_price(price):
-    """
-    Converts a price in cents to a formatted string in euros with a comma as the decimal separator.
-    
-    Args:
-        price (int): The price in cents.
-    
-    Returns:
-        str: The formatted price in euros, e.g., "6,00" for 600.
-    """
-    euros = price // 100
-    cents = price % 100
-    return f"{euros},{cents:02d}"
-
 
 def fetch_menu():
     try:
         response = requests.get(
-            f"https://bestellen.broodbode.nl/v2-2/pccheck/null/29-11-2024/afhalen/8?cb=1695969466297",
+            f"https://bestellen.broodbode.nl/v2-2/pccheck/null/{date.today()}/afhalen/8?cb=1695969466297",
             headers={
                 "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:125.0) Gecko/20100101 Firefox/125.0"
             },
@@ -259,11 +258,15 @@ def build_paninis_menu():
         # Initialize row with panini name
         row = [product["title"].strip()]
 
+        
         if (
             43 in compatible_bread_type_ids and 43 in menu["breadtypes"]
         ):  # ID for Focaccia
             prices = calculate_price(menu["breadtypes"][43], totals, product)
             codes_paninis[prices["price"].replace(",", "")] = prices["product"]
+            row.append(str(prices["price"]))
+        elif not product["breadtypes"] or len(json.loads(product["breadtypes"])) == 0:
+            prices = calculate_price2(totals, product)
             row.append(str(prices["price"]))
         else:
             row.append("-")
@@ -443,11 +446,15 @@ def generate_paninis_menu_markdown():
         # Initialize row with panini name
         row = [product["title"].strip()]
 
+
         if (
             43 in compatible_bread_type_ids and 43 in menu["breadtypes"]
         ):  # ID for Focaccia
             prices = calculate_price(menu["breadtypes"][43], totals, product)
             codes_paninis[prices["price"].replace(",", "")] = prices["product"]
+            row.append(str(prices["price"]))
+        elif not product["breadtypes"] or len(json.loads(product["breadtypes"])) == 0:
+            prices = calculate_price2(totals, product)
             row.append(str(prices["price"]))
         else:
             row.append("-")

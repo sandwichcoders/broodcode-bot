@@ -4,8 +4,10 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support import expected_conditions as ec
+from selenium.common.exceptions import WebDriverException
 import time
+
 
 class LinkChecker:
     def __init__(self):
@@ -23,19 +25,17 @@ class LinkChecker:
 
             try:
                 betaal_button = WebDriverWait(self.driver, 5).until(
-                    EC.visibility_of_element_located((By.TAG_NAME, "sfc-button"))
+                    ec.visibility_of_element_located((By.TAG_NAME, "sfc-button"))
                 )
                 if betaal_button.is_displayed():
                     return "working"
-                else:
-                    return "expired"
-            except Exception as e:
+                return "expired"
+            except WebDriverException as e:
                 print(f"Error: {e}")
                 return "error"
 
-        except Exception as e:
+        except WebDriverException as e:
             print(f"Error while loading the page: {e}")
             return "error"
         finally:
             self.driver.quit()
-

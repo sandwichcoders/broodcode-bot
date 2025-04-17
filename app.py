@@ -84,8 +84,8 @@ async def send_order_message():
 
 def generate_full_menu():
     """Generates the full menu combining sandwich, special, and paninis menus."""
-    sandwich_menu = generate_sandwich_menu_markdown()
     special_menu = generate_special_menu_markdown()
+    sandwich_menu = generate_sandwich_menu_markdown()
     paninis_menu = generate_paninis_menu_markdown()
 
     return sandwich_menu + special_menu + paninis_menu

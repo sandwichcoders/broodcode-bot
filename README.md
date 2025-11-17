@@ -5,7 +5,7 @@ This is the official bot for Broodcode, an system to automate your sandwich orde
 This bots checks every minute if it is 08:00 Friday. If it is and the link is still valid it will send a message containing the menu and the current payment link based in the `config.json`.
 For checking the availability of the payment link, the bot creates a headless undetected chrome selenium browser and checks if there is an existing button that contains the text "Betaal", If yes it marks the link as valid, if no it will tag the breadmasters and mark the link as invalid.
 
-Menu function was already a part of broodcode
+Menu function was already a part of broodcode :0
 
 ## Commands:
 - /check_link
